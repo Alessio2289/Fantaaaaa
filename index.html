@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Timer Asta Fantacalcio</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 40px; }
+    #timer {
+      font-size: 80px;
+      font-weight: bold;
+      margin: 20px;
+      transition: color 0.3s ease;
+    }
+    .warning {
+      color: red;
+      animation: shake 0.5s infinite alternate;
+    }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(5px); }
+      100% { transform: translateX(-5px); }
+    }
+    button {
+      font-size: 20px;
+      padding: 10px 25px;
+      margin: 10px;
+      cursor: pointer;
+    }
+    #message {
+      font-size: 32px;
+      font-weight: bold;
+      margin-top: 30px;
+      min-height: 60px;
+      text-transform: uppercase;
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Timer Asta Fantacalcio</h1>
+<div id="timer">8</div>
+
+<button id="startBtn">Avvia Timer</button>
+<button id="rilancioBtn" disabled>Rilancio</button>
+<button id="astaChiusaBtn" disabled>Asta Chiusa</button>
+
+<div id="message"></div>
+
+<script>
+  const timerEl = document.getElementById('timer');
+  const startBtn = document.getElementById('startBtn');
+  const rilancioBtn = document.getElementById('rilancioBtn');
+  const astaChiusaBtn = document.getElementById('astaChiusaBtn');
+  const messageEl = document.getElementById('message');
+
+  let timeLeft = 8;
+  let timerInterval = null;
+
+  const rilancioMessages = [
+    "COLPO DA MAESTRO! 🎯", "OFFERTA D'ÉLITE! 💼", "BOOM! 💥", "RILANCIO FULMINEO! ⚡",
+    "MA DOVE VAI?! 😵", "ATTENZIONE AI COLPI BASSI! 🥊", "TI STAI SCALDANDO TROPPO... 🔥",
+    "UN ALTRO? SEI SICURO? 🤔", "OCCHI NEGLI OCCHI 👀", "ASTA DI FUOCO! 🔥",
+    "MOMENTO EPICO! 🌟", "STANDING OVATION! 👏", "LA FOLLIA HA UN PREZZO! 🤑",
+    "SFIDA TITANICA! 🛡️", "ALTRO CHE CHAMPIONS LEAGUE! 🏆", "RILANCIO SHOCK! ⚠️",
+    "AZZARDO TOTALE! 🧨", "TENSIONE ALLE STELLE! 🚀", "LO VOLEVA ANCHE TUA NONNA! 👵",
+    "BATTAGLIA FINALE! 🏁", "TI STAI INNAMORANDO? 💘", "OFFERTA ROMANTICA? 💝",
+    "DA URLO! 😱", "LO STAI STRAPAGANDO... 💸", "CHI OFFRE DI PIÙ? 📢",
+    "TUTTI ZITTI, È IL TUO MOMENTO. 🤫", "CHE STILE, CHE GRINTA! 💅", 
+    "RILANCIO CHIRURGICO! 💉", "ASSURDO! 🤯", "NON CI CREDO! 😮", "TI STAI GIOCANDO TUTTO! 🎲",
+    "È GUERRA APERTA! ⚔️", "IL TAVOLO TREMA! 💣", "NESSUNO SE LO ASPETTAVA! 😲",
+    "BRIVIDI! ❄️", "VAI COL BOTTO! 🎆", "DICHIARAZIONE D’AMORE! 💓",
+    "OFFERTA DA LEGGENDA! 🏅", "LO COMPRI O LO ADOTTI? 🐶", "TUTTI GLI OCCHI SU DI TE! 👁️",
+    "TENSIONE PALPABILE! 😬", "TE LO SOGNERAI STANOTTE! 😴", "LO PRENDERAI? 🎯",
+    "ORA SI FA SUL SERIO! 💪", "TUTTI IMPAZZITI! 🤪", "NON PUOI PIÙ TORNARE INDIETRO! 🚫",
+    "OFFERTA DELLE OFFERTE! 🤑", "ORA O MAI PIÙ! 🕐", "IL PUBBLICO ESULTA! 🎉",
+    "CHE SPETTACOLO! 🎭"
+  ];
+
+  const chiusaMessages = [
+    "ASTA CHIUSA! COMPLIMENTI AL VINCITORE! 🎉", "È TUO! GRANDE ACQUISTO! 🥳",
+    "COLPO PERFETTO! 🏅", "CHE AFFARE! 💰", "HAI FATTO IMPAZZIRE TUTTI! 😱",
+    "GIOCATORE FIRMATO! ✍️", "TALENTO NELLE TUE MANI! 🌟", "NESSUNO POTEVA FERMARTI! 💪",
+    "RE DELL’ASTA! 👑", "ACQUISTO DEL SECOLO! 📈", "CI HAI MESSO IL CUORE! ❤️",
+    "HAI DOMINATO! 🦁", "APPLAUSI PER TE! 👏", "AFFARE DA INCORNICIARE! 🖼️",
+    "ORA INIZIA IL DIVERTIMENTO! 🎈", "MISSIONE COMPIUTA! ✅", "FUMATA BIANCA! ⚪",
+    "STRAPPATO AGLI AVVERSARI! 💥", "ROSA POTENZIATA! 🌱", "GIOCATA DA CAMPIONE! 🧠"
+  ];
+
+  function getRandomMessage(messages) {
+    return messages[Math.floor(Math.random() * messages.length)];
+  }
+
+  function getRandomBrightColor() {
+    const colors = ['#ff5733', '#33c1ff', '#ffc300', '#28a745', '#6f42c1', '#e83e8c', '#17a2b8', '#fd7e14'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  function updateTimer() {
+    timerEl.textContent = timeLeft;
+
+    if (timeLeft <= 3 && timeLeft > 0) {
+      timerEl.classList.add('warning');
+    } else {
+      timerEl.classList.remove('warning');
+    }
+
+    if (timeLeft === 0) {
+      clearInterval(timerInterval);
+      messageEl.style.backgroundColor = 'transparent';
+      messageEl.textContent = "TEMPO SCADUTO! PROSSIMA OFFERTA.";
+      rilancioBtn.disabled = true;
+      astaChiusaBtn.disabled = false;
+    } else {
+      timeLeft--;
+    }
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timeLeft = 8;
+    timerEl.textContent = timeLeft;
+    timerEl.classList.remove('warning');
+    messageEl.textContent = '';
+    messageEl.style.backgroundColor = 'transparent';
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+
+  startBtn.addEventListener('click', () => {
+    rilancioBtn.disabled = false;
+    astaChiusaBtn.disabled = true;
+    startTimer();
+  });
+
+  rilancioBtn.addEventListener('click', () => {
+    if (timeLeft >= 1) {
+      const msg = getRandomMessage(rilancioMessages);
+      messageEl.textContent = msg;
+      messageEl.style.backgroundColor = getRandomBrightColor();
+      setTimeout(startTimer, 200); // fa vedere il messaggio prima di resettare
+    } else {
+      messageEl.textContent = "NON PUOI RILANCIARE, TEMPO SCADUTO!";
+      messageEl.style.backgroundColor = 'transparent';
+      rilancioBtn.disabled = true;
+    }
+  });
+
+  astaChiusaBtn.addEventListener('click', () => {
+    messageEl.textContent = getRandomMessage(chiusaMessages);
+    messageEl.style.backgroundColor = getRandomBrightColor();
+    rilancioBtn.disabled = true;
+    astaChiusaBtn.disabled = true;
+    clearInterval(timerInterval);
+  });
+</script>
+
+</body>
+</html>
